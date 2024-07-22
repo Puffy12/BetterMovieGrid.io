@@ -7,7 +7,7 @@ export class Game {
 	answer: string;
 
 	/**
-	 * Create a game object from the player's cookie, or initialise a new game
+	 * Create a game object from the player's cookie, or initialise a new games
 	 */
 	constructor(serialized: string | undefined = undefined) {
 		if (serialized) {
