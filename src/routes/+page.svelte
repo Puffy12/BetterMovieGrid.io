@@ -3,9 +3,58 @@
     <meta name="description" content="Svelte demo app" />
 </svelte:head>
 
-
 <script lang="ts">
     import InputModal from './InputModal.svelte';
+    import { onMount } from 'svelte';
+    import { actors, hints } from '../stores/movieStore';
+    import { fetchPopularActors } from '../utils/api';
+
+    interface Actor {
+        id: number;
+        name: string;
+        popularity: number;
+        profile_path: string | null;
+        known_for: Array<{ media_type: string; title?: string; name?: string }>;
+    }
+
+    const getRandomActors = (actorList: Actor[], num: number): Actor[] => {
+        const shuffled = [...actorList].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, num);
+    };
+
+    const generateHints = (actors: Actor[]): string[] => {
+        return [
+            'Title Starts with A-H (Ignore "the")',
+            'Title Starts with I-P (Ignore "the")',
+            'Double Letter Word in Title'
+        ];
+    };
+
+    onMount(async () => {
+        let dailyActors: Actor[] = JSON.parse(localStorage.getItem('dailyActors') || 'null');
+        let dailyHints: string[][] = JSON.parse(localStorage.getItem('dailyHints') || 'null');
+
+        if (!dailyActors || !dailyHints) {
+            const popularActors: Actor[] = await fetchPopularActors();
+            if (popularActors.length === 0) {
+                console.error("No popular actors fetched");
+                return;
+            }
+            const filteredActors: Actor[] = popularActors.filter(actor => actor.known_for.some(movie => movie.media_type === 'movie'));
+            dailyActors = getRandomActors(filteredActors, 3);
+            
+            localStorage.setItem('dailyActors', JSON.stringify(dailyActors));
+            localStorage.setItem('dailyHints', JSON.stringify(dailyHints));
+        }
+
+        actors.set(dailyActors);
+        hints.set(dailyHints);
+    });
+
+    let actorData: Actor[] = [];
+    let hintData: string[][] = [];
+    $: actorData = $actors || [];
+    $: hintData = $hints || [];
 
     // Initialize image sources as null to hide images by default
     let imageSources: (string | null)[] = [
@@ -33,26 +82,58 @@
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
-    <div class="grid grid-cols-3 w-full max-w-md border border-black">
-        {#each imageSources as src, i}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div 
-                role="button" 
-                tabindex="0" 
-                class="flex items-center justify-center bg-gray-400 text-xl hover:bg-gray-700 h-48 border border-black cursor-pointer relative"
-                on:click={() => openModal(i + 1)}
-            >
-                {#if src}
-                    <img src={src} alt={`Image for cell ${i + 1}`} class="object-cover w-full h-full"/>
-                {:else}
-                    <span class="text-white text-2xl font-bold">{i + 1}</span>
-                {/if}
-            </div>
-        {/each}
+    <div class="grid grid-cols-4 grid-rows-4 w-full max-w-4xl border border-transparent">
+        <!-- Empty top-left cell -->
+        <div class="flex items-center justify-center border border-transparent bg-transparent"></div>
+
+        <!-- Column hints -->
+        {#if hintData.length > 0}
+            {#each hintData[0] as hint}
+                <div class="flex items-center justify-center border border-transparent bg-transparent h-24 text-center">
+                    <p>{hint}</p>
+                </div>
+            {/each}
+        {/if}
+
+        <!-- Actor names and movie cells -->
+        {#if actorData.length > 0 && hintData.length > 0}
+            {#each actorData as actor, rowIndex}
+                <div class="flex items-center justify-center border border-transparent bg-transparent m-2">
+                    <p>{actor.name}</p>
+                </div>
+                {#each Array(3) as _, colIndex}
+                    <div 
+                        role="button" 
+                        tabindex="0" 
+                        class="flex items-center justify-center bg-gray-400 text-xl hover:bg-gray-700 h-48 border border-black cursor-pointer relative"
+                        on:click={() => openModal(rowIndex * 3 + colIndex + 1)}
+                    >
+                        {#if imageSources[rowIndex * 3 + colIndex]}
+                            <img src={imageSources[rowIndex * 3 + colIndex]} alt={`Image for cell ${rowIndex * 3 + colIndex + 1}`} class="object-cover w-full h-full"/>
+                        {:else}
+                            <span class="text-white text-2xl font-bold">{rowIndex * 3 + colIndex + 1}</span>
+                        {/if}
+                    </div>
+                {/each}
+            {/each}
+        {/if}
     </div>
 </div>
 
 <InputModal visible={showModal} onClose={closeModal} cellId={selectedCellId} onSubmitImage={handleImageSubmit} />
+
+<style>
+    .grid {
+        display: grid;
+        grid-template-columns: auto repeat(3, 1fr);
+        grid-template-rows: auto repeat(3, 1fr);
+    }
+    .grid div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
 
 <!-- 
 'src/lib/images/BadBoys.jpg',
