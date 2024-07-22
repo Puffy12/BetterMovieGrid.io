@@ -5,9 +5,10 @@
 
 <script lang="ts">
     import InputModal from './InputModal.svelte';
+	import SearchModal from '../components/SearchModal.svelte';
     import { onMount } from 'svelte';
     import { actors, hints } from '../stores/movieStore';
-    import { fetchPopularActors } from '../utils/api';
+    import { fetchPopularActors, fetchMoviesByActor } from '../utils/api';
 
     interface Actor {
         id: number;
@@ -38,9 +39,6 @@
         const dailyActors = getRandomActors(filteredActors, 3);
         const dailyHints = dailyActors.map(generateHints);
 
-        console.log(dailyActors);
-        console.log(dailyHints);
-
         actors.set(dailyActors);
         hints.set(dailyHints);
     });
@@ -67,6 +65,21 @@
     const handleImageSubmit = (cellId: number, imageUrl: string) => {
         if (cellId > 0 && cellId <= imageSources.length) {
             imageSources[cellId - 1] = imageUrl;
+        }
+    };
+
+	const handleGuessSubmit = async (event: CustomEvent) => {
+        const { cellId, movie } = event.detail;
+        const actor = actorData[Math.floor((cellId - 1) / 3)];
+        const movies = await fetchMoviesByActor(actor.id);
+        const isCorrect = movies.some(m => m.id === movie.id);
+
+        if (isCorrect) {
+            // Do something for correct guess
+            console.log(`Correct guess: ${movie.title}`);
+        } else {
+            // Do something for incorrect guess
+            console.log(`Incorrect guess: ${movie.title}`);
         }
     };
 </script>
@@ -111,7 +124,12 @@
     </div>
 </div>
 
-<InputModal visible={showModal} onClose={closeModal} cellId={selectedCellId} onSubmitImage={handleImageSubmit} />
+<SearchModal 
+    visible={showModal} 
+    onClose={closeModal} 
+    cellId={selectedCellId} 
+    on:submitGuess={handleGuessSubmit} 
+/>
 
 <style>
     .grid {
