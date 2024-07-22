@@ -31,21 +31,14 @@
     };
 
     onMount(async () => {
-        let dailyActors: Actor[] = JSON.parse(localStorage.getItem('dailyActors') || 'null');
-        let dailyHints: string[][] = JSON.parse(localStorage.getItem('dailyHints') || 'null');
-
-        if (!dailyActors || !dailyHints) {
-            const popularActors: Actor[] = await fetchPopularActors();
-            if (popularActors.length === 0) {
-                console.error("No popular actors fetched");
-                return;
-            }
-            const filteredActors: Actor[] = popularActors.filter(actor => actor.known_for.some(movie => movie.media_type === 'movie'));
-            dailyActors = getRandomActors(filteredActors, 3);
-            
-            localStorage.setItem('dailyActors', JSON.stringify(dailyActors));
-            localStorage.setItem('dailyHints', JSON.stringify(dailyHints));
+        const popularActors: Actor[] = await fetchPopularActors();
+        if (popularActors.length === 0) {
+            console.error("No popular actors fetched");
+            return;
         }
+        const filteredActors: Actor[] = popularActors.filter(actor => actor.known_for.some(movie => movie.media_type === 'movie'));
+        const dailyActors = getRandomActors(filteredActors, 3);
+        const dailyHints = dailyActors.map(generateHints);
 
         actors.set(dailyActors);
         hints.set(dailyHints);
