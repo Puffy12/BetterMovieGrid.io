@@ -22,13 +22,11 @@
         return shuffled.slice(0, num);
     };
 
-    const generateHints = (actors: Actor[]): string[] => {
-        return [
-            'Title Starts with A-H (Ignore "the")',
-            'Title Starts with I-P (Ignore "the")',
-            'Double Letter Word in Title'
-        ];
-    };
+    const generateHints = (actors: Actor[]): string[] => [
+        'Title Starts with A-H (Ignore "the")',
+        'Title Starts with I-P (Ignore "the")',
+        'Double Letter Word in Title'
+    ];
 
     onMount(async () => {
         let dailyActors: Actor[] = JSON.parse(localStorage.getItem('dailyActors') || 'null');
@@ -42,10 +40,13 @@
             }
             const filteredActors: Actor[] = popularActors.filter(actor => actor.known_for.some(movie => movie.media_type === 'movie'));
             dailyActors = getRandomActors(filteredActors, 3);
-            
+
             localStorage.setItem('dailyActors', JSON.stringify(dailyActors));
             localStorage.setItem('dailyHints', JSON.stringify(dailyHints));
         }
+
+        console.log(dailyActors);
+        console.log(dailyHints);
 
         actors.set(dailyActors);
         hints.set(dailyHints);
@@ -56,11 +57,7 @@
     $: actorData = $actors || [];
     $: hintData = $hints || [];
 
-    // Initialize image sources as null to hide images by default
-    let imageSources: (string | null)[] = [
-        null, null, null, null, null, null, null, null, null
-    ];
-    
+    let imageSources: (string | null)[] = Array(9).fill(null);
     let showModal: boolean = false;
     let selectedCellId: number | null = null;
 
@@ -76,13 +73,13 @@
 
     const handleImageSubmit = (cellId: number, imageUrl: string) => {
         if (cellId > 0 && cellId <= imageSources.length) {
-            imageSources[cellId - 1] = imageUrl; // Update image source with URL
+            imageSources[cellId - 1] = imageUrl;
         }
     };
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
-    <div class="grid grid-cols-4 grid-rows-4 w-full max-w-4xl border border-transparent">
+    <div class="grid grid-cols-4 grid-rows-4 w-full max-w-md border border-transparent">
         <!-- Empty top-left cell -->
         <div class="flex items-center justify-center border border-transparent bg-transparent"></div>
 
@@ -102,6 +99,7 @@
                     <p>{actor.name}</p>
                 </div>
                 {#each Array(3) as _, colIndex}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div 
                         role="button" 
                         tabindex="0" 
