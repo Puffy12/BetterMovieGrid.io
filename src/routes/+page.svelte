@@ -72,9 +72,9 @@
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
-    <div class="grid grid-cols-4 grid-rows-4 w-full max-w-md border border-transparent">
+    <div class="grid grid-cols-4 grid-rows-4 -translate-x-12 w-full max-w-lg border border-transparent">
         <!-- Empty top-left cell -->
-        <div class="flex items-center justify-center border border-transparent bg-transparent"></div>
+        <div class="flex items-center justify-start border border-transparent bg-transparent"></div>
 
         <!-- Column hints -->
         {#if hintData.length > 0}
