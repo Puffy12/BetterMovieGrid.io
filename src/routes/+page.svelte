@@ -1,14 +1,12 @@
-<svelte:head>
-    <title>Home</title>
-    <meta name="description" content="Svelte demo app" />
-</svelte:head>
-
 <script lang="ts">
-    import InputModal from './InputModal.svelte';
+    // Import necessary components and functions
 	import SearchModal from '../components/SearchModal.svelte';
     import { onMount } from 'svelte';
     import { actors, hints } from '../stores/movieStore';
     import { fetchPopularActors, fetchMoviesByActor } from '../utils/api';
+    import axios from 'axios';
+
+    const BASE_URL = "https://api.themoviedb.org/3";
 
     interface Actor {
         id: number;
@@ -43,6 +41,31 @@
         hints.set(dailyHints);
     });
 
+    const fetchCollectionImages = async (collectionId: number): Promise<string | null> => {
+        try {
+            const response = await axios.get(
+            `${BASE_URL}/collection/${collectionId}/images`,
+            {
+                headers: {
+                accept: "application/json",
+                Authorization:
+                    "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5YzdmNGRiMGY5OTdjZWYxNGVhZDY2ZjA0ZGNhMzQ3YyIsIm5iZiI6MTcyMTY3ODM5Ny41MDM4MDMsInN1YiI6IjY2OWViOTliMmJiNDcyOWEzNWQxNzY4ZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.jkt6au6iiXeO6abHLuPvWWxSQTyv-jyGUeDCK5KiRcM",
+                },
+            }
+            );
+            const imageResults = response.data;
+
+            if (imageResults.backdrops.length > 0) {
+            return `https://image.tmdb.org/t/p/w500${imageResults.backdrops[0].file_path}`;
+            } else {
+            return null;
+            }
+        } catch (error) {
+            console.error("Error fetching images from TMDB API", error);
+            return null;
+        }
+    };
+
     let actorData: Actor[] = [];
     let hintData: string[][] = [];
     $: actorData = $actors || [];
@@ -68,15 +91,25 @@
         }
     };
 
-	const handleGuessSubmit = async (event: CustomEvent) => {
+    const handleGuessSubmit = async (event: CustomEvent) => {
         const { cellId, movie } = event.detail;
         const actor = actorData[Math.floor((cellId - 1) / 3)];
         const movies = await fetchMoviesByActor(actor.id);
         const isCorrect = movies.some(m => m.id === movie.id);
 
         if (isCorrect) {
-            // Do something for correct guess
+            try {
+            let image = await fetchCollectionImages(10);
+            if (image) {
+                console.log(cellId)
+                imageSources[cellId-1] = image;
+            } else {
+                console.log("No image found for collection.");
+            }
             console.log(`Correct guess: ${movie.title}`);
+            } catch (error) {
+            console.error("Error fetching image:", error);
+            }
         } else {
             // Do something for incorrect guess
             console.log(`Incorrect guess: ${movie.title}`);
@@ -143,10 +176,3 @@
         justify-content: center;
     }
 </style>
-
-<!-- 
-'src/lib/images/BadBoys.jpg',
-'src/lib/images/MySpy.jpg',
-'src/lib/images/TheBoys.jpg',
-'src/lib/images/ThoseAboutTo.jpg',
- -->

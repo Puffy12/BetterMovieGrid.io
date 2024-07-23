@@ -38,7 +38,7 @@
           },
         }
       );
-      movieResults = response.data.results.map(
+      movieResults = response.data.results.slice(0, 10).map(
         (movie: { id: number; title: string }) => ({
           id: movie.id,
           title: movie.title,
@@ -59,15 +59,30 @@
     if (cellId && selectedMovie) {
       dispatch("submitGuess", { cellId, movie: selectedMovie });
     }
+    query = "";
+    movieResults = [];
+    onClose();
+  };
+
+  const handleCancel = () => {
+    query = "";
+    movieResults = [];
     onClose();
   };
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if visible}
-  <div class="modal-overlay" on:click={onClose}>
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="modal-overlay" on:click={handleCancel}>
+    
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="modal" on:click|stopPropagation>
-      <h2>Guess the Movie</h2>
+      
+      <h2 class="mb-2">Guess the Movie</h2>
       <input
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
         type="text"
         placeholder="Start typing a movie name..."
         bind:value={query}
@@ -76,12 +91,14 @@
       {#if movieResults.length > 0}
         <ul class="results">
           {#each movieResults as movie}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
             <li on:click={() => selectMovie(movie)}>{movie.title}</li>
           {/each}
         </ul>
       {/if}
-      <button on:click={submitGuess} disabled={!selectedMovie}>Guess</button>
-      <button on:click={onClose}>Cancel</button>
+      <button on:click={submitGuess} disabled={!selectedMovie} class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Guess</button>
+      <button on:click={handleCancel} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" >Cancel</button>
     </div>
   </div>
 {/if}
