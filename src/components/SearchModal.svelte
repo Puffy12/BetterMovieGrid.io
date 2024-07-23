@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import axios from "axios";
 
-  const BEARER_TOKEN = import.meta.env.TMDB_BEARER_TOKEN;
+  const BEARER_TOKEN = import.meta.env.VITE_TMDB_BEARER_TOKEN;
   const BASE_URL = "https://api.themoviedb.org/3";
 
   export let visible: boolean;
