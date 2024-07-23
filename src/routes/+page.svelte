@@ -36,18 +36,49 @@
     };
   
     onMount(async () => {
-      const popularActors: Actor[] = await fetchPopularActors();
-      if (popularActors.length === 0) {
+    const popularActors: Actor[] = await fetchPopularActors();
+    if (popularActors.length === 0) {
         console.error("No popular actors fetched");
         return;
-      }
-      const filteredActors: Actor[] = popularActors.filter(actor => actor.known_for.some(movie => movie.media_type === 'movie'));
-      const dailyActors = getRandomActors(filteredActors, 3);
-      const dailyHints = dailyActors.map(generateHints);
-  
-      actors.set(dailyActors);
-      hints.set(dailyHints);
+    }
+    const filteredActors: Actor[] = popularActors.filter(actor => actor.known_for.some(movie => movie.media_type === 'movie'));
+    const dailyActors = getRandomActors(filteredActors, 3);
+    const dailyHints = dailyActors.map(generateHints);
+
+    // Fetch and store actor photos
+    for (const actor of dailyActors) {
+        const photoUrl = await fetchActorPhoto(actor.id);
+        if (photoUrl) {
+        actorPhotos[actor.name] = photoUrl;
+        }
+    }
+
+    actors.set(dailyActors);
+    hints.set(dailyHints);
     });
+
+    const fetchActorPhoto = async (actorId: number): Promise<string | null> => {
+    try {
+        const response = await axios.get(
+          `${BASE_URL}/person/${actorId}/images`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization:
+                "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5YzdmNGRiMGY5OTdjZWYxNGVhZDY2ZjA0ZGNhMzQ3YyIsIm5iZiI6MTcyMTY3ODM5Ny41MDM4MDMsInN1YiI6IjY2OWViOTliMmJiNDcyOWEzNWQxNzY4ZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.jkt6au6iiXeO6abHLuPvWWxSQTyv-jyGUeDCK5KiRcM",
+            },
+          }
+        );
+        const data = await response.data;
+        if (data.profiles && data.profiles.length > 0) {
+        return `https://image.tmdb.org/t/p/w300_and_h450_bestv2${data.profiles[0].file_path}`;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching actor photo:", error);
+        return null;
+    }
+    };
   
     const fetchCollectionImages = async (collectionId: number): Promise<string | null> => {
       try {
@@ -90,6 +121,7 @@
     let showActorModal: boolean = false;
     let selectedActorName: string = '';
     let selectedActorPhoto: string | null = null;
+    let actorPhotos: { [key: string]: string } = {};
   
     const openHintModal = (hint: string) => {
         hintText = hint;
@@ -144,8 +176,7 @@
 
     const openActorModal = async (actor: Actor) => {
         selectedActorName = actor.name;
-        selectedActorPhoto = "https://media.themoviedb.org/t/p/w300_and_h450_bestv2/wcI594cwM4ArPwvRd2IU0Z0yLuh.jpg";
-        //selectedActorPhoto = await fetchActorPhoto(actor.id);
+        selectedActorPhoto = actorPhotos[actor.name];
         showActorModal = true;
     };
 
