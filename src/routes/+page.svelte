@@ -1,6 +1,7 @@
 <script lang="ts">
     import SearchModal from '../components/SearchModal.svelte';
     import HintModal from '../components/HintModal.svelte';
+    import ActorModal from '../components/ActorModal.svelte';
     import { onMount } from 'svelte';
     import { actors, hints } from '../stores/movieStore';
     import { fetchPopularActors, fetchMoviesByActor } from '../utils/api';
@@ -85,6 +86,10 @@
     let showHintModal: boolean = false;
     let hintText: string = '';
     let hintDescription: string = '';
+
+    let showActorModal: boolean = false;
+    let selectedActorName: string = '';
+    let selectedActorPhoto: string | null = null;
   
     const openHintModal = (hint: string) => {
         hintText = hint;
@@ -136,6 +141,19 @@
         console.log(`Incorrect guess: ${movie.title}`);
       }
     };
+
+    const openActorModal = async (actor: Actor) => {
+        selectedActorName = actor.name;
+        selectedActorPhoto = "https://media.themoviedb.org/t/p/w300_and_h450_bestv2/wcI594cwM4ArPwvRd2IU0Z0yLuh.jpg";
+        //selectedActorPhoto = await fetchActorPhoto(actor.id);
+        showActorModal = true;
+    };
+
+    const closeActorModal = () => {
+        showActorModal = false;
+        selectedActorName = '';
+        selectedActorPhoto = null;
+    };
   </script>
   
   <div class="flex items-center justify-center min-h-screen">
@@ -157,9 +175,11 @@
       <!-- Actor names and movie cells -->
       {#if actorData.length > 0 && hintData.length > 0}
         {#each actorData as actor, rowIndex}
-          <div class="flex items-center justify-center border border-transparent bg-transparent m-2">
-            <p>{actor.name}</p>
-          </div>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <div class="flex items-center justify-center border border-transparent bg-transparent m-2 cursor-pointer" on:click={() => openActorModal(actor)}>
+                <p>{actor.name}</p>
+            </div>
           {#each Array(3) as _, colIndex}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div 
@@ -179,6 +199,15 @@
       {/if}
     </div>
   </div>
+
+  {#if showActorModal}
+    <ActorModal 
+        visible={showActorModal} 
+        actorName={selectedActorName} 
+        actorPhoto={selectedActorPhoto} 
+        onClose={closeActorModal} 
+    />
+{/if}
   
   <HintModal 
     visible={showHintModal} 
