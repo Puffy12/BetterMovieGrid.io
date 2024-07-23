@@ -7,7 +7,7 @@
   import { fetchPopularActors, fetchMoviesByActor } from "../utils/api";
   import axios from "axios";
 
-  const BEARER_TOKEN = import.meta.env.TMDB_BEARER_TOKEN;
+  const BEARER_TOKEN = import.meta.env.VITE_TMDB_BEARER_TOKEN;
   const BASE_URL = "https://api.themoviedb.org/3";
 
   interface Actor {
@@ -40,7 +40,7 @@
   };
 
   onMount(async () => {
-    const popularActors: Actor[] = await fetchPopularActors();
+    const popularActors: Actor[] = await fetchPopularActors(25); // Fetch actors from 5 pages
     if (popularActors.length === 0) {
       console.error("No popular actors fetched");
       return;

@@ -3,25 +3,35 @@ import axios from "axios";
 const BEARER_TOKEN = import.meta.env.VITE_TMDB_BEARER_TOKEN;
 const BASE_URL = "https://api.themoviedb.org/3";
 
-export const fetchPopularActors = async () => {
+export const fetchPopularActors = async (pages = 25) => {
   try {
-    const response = await axios.get(`${BASE_URL}/person/popular`, {
-      headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${BEARER_TOKEN}`,
-      },
-    });
+    let allActors = [];
 
-    // Filtering criteria
-    const filteredActors = response.data.results.filter((actor) => {
-      return (
-        actor.popularity > 10 &&
-        actor.profile_path &&
-        actor.known_for_department === "Acting"
-      );
-    });
+    for (let page = 1; page <= pages; page++) {
+      const response = await axios.get(`${BASE_URL}/person/popular`, {
+        headers: {
+          accept: "application/json",
+          Authorization: `Bearer ${BEARER_TOKEN}`,
+        },
+        params: {
+          language: "en-US",
+          page,
+        },
+      });
 
-    return filteredActors;
+      const filteredActors = response.data.results.filter((actor) => {
+        return (
+          actor.popularity > 10 &&
+          actor.profile_path &&
+          actor.known_for_department === "Acting" &&
+          actor.known_for[0].original_language === "en"
+        );
+      });
+
+      allActors = allActors.concat(filteredActors);
+    }
+
+    return allActors;
   } catch (error) {
     console.error("Error fetching popular actors from TMDB API", error);
     return [];
