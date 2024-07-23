@@ -46,7 +46,7 @@
 
       // Filter out movies with low popularity and sort by popularity and release date
       movieResults = response.data.results
-        .filter((movie: { popularity: number }) => movie.popularity > 10)
+        .filter((movie: { popularity: number }) => movie.popularity > 3)
         .sort((a: { popularity: number; release_date: string }, b: { popularity: number; release_date: string }) => {
           if (b.popularity === a.popularity) {
             return new Date(b.release_date).getTime() - new Date(a.release_date).getTime();

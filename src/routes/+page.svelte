@@ -99,7 +99,7 @@
       const imageResults = response.data;
       //results[0].poster_path;
       console.log(imageResults.results);
-      if (imageResults.results.length > 1) {
+      if (imageResults.results.length >= 1) {
         return `https://image.tmdb.org/t/p/w500${imageResults.results[0].poster_path}`;
       } else {
         return null;
