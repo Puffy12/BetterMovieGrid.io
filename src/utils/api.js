@@ -3,7 +3,7 @@ import axios from "axios";
 const BEARER_TOKEN = import.meta.env.VITE_TMDB_BEARER_TOKEN;
 const BASE_URL = "https://api.themoviedb.org/3";
 
-export const fetchPopularActors = async (pages = 25) => {
+export const fetchPopularActors = async (pages = 50) => {
   try {
     let allActors = [];
 

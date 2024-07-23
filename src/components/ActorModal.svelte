@@ -6,7 +6,9 @@
   </script>
   
   {#if visible}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" on:click={onClose}>
       <div class="bg-white p-6 rounded-lg shadow-lg relative w-80 max-w-sm">
         <!-- Close button positioned within the modal -->
         <button class="absolute top-2 right-2 text-xl font-semibold text-gray-600 hover:text-gray-900" on:click={onClose}>×</button>

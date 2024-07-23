@@ -18,29 +18,131 @@
     known_for: Array<{ media_type: string; title?: string; name?: string }>;
   }
 
-  const getRandomActors = (actorList: Actor[], num: number): Actor[] => {
-    const shuffled = [...actorList].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, num);
-  };
+  interface Movie {
+    id: number;
+    title: string;
+    release_date: string;
+    genre_ids: number[];
+  }
 
-  const generateHints = (actors: Actor[]): string[] => [
+  const hintOptions = [
     'Title Starts with A-H (Ignore "the")',
     'Title Starts with I-P (Ignore "the")',
+    'Title Starts with Q-Z (Ignore "the")',
     "Double Letter Word in Title",
+    'One Word Title (Ignore "the")',
+    "Three or More Word Title",
+    "Released From: 2010-2024",
+    "Released From: 1990-2010",
+    "Pilot Released From: 1990-2024",
+    "Genre: Action",
+    "Genre: Comedy",
+    "Genre: Drama",
+    "Genre: Thriller",
   ];
 
-  // Hint descriptions
   const hintDescriptions = {
     'Title Starts with A-H (Ignore "the")':
       'This hint indicates that the movie title begins with a letter from A to H, not considering the initial "the".',
     'Title Starts with I-P (Ignore "the")':
       'This hint suggests that the movie title starts with a letter from I to P, again ignoring any leading "the".',
+    'Title Starts with Q-Z (Ignore "the")':
+      'This hint suggests that the movie title starts with a letter from Q to Z, again ignoring any leading "the".',
     "Double Letter Word in Title":
       'This hint reveals that the movie title contains a word with double letters, such as "letter" or "butter".',
+    "One Word Title (Ignore 'the')":
+      'This hint indicates that the movie title is a single word, ignoring any leading "the".',
+    "Three or More Word Title":
+      "This hint suggests that the movie title consists of three or more words.",
+    "Released From: 2010-2024":
+      "This hint indicates that the movie was released between the years 2010 and 2024.",
+    "Released From: 1990-2010":
+      "This hint indicates that the movie was released between the years 1990 and 2010.",
+    "Pilot Released From: 1990-2024":
+      "This hint suggests that the pilot episode of a series was released between 1990 and 2024.",
+    "Genre: Action":
+      "This hint suggests that the movie belongs to the action genre.",
+    "Genre: Comedy":
+      "This hint suggests that the movie belongs to the comedy genre.",
+    "Genre: Drama":
+      "This hint suggests that the movie belongs to the drama genre.",
+    "Genre: Thriller":
+      "This hint suggests that the movie belongs to the thriller genre.",
+  };
+
+  const getRandomActors = (actorList: Actor[], num: number): Actor[] => {
+    const shuffled = [...actorList].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, num);
+  };
+
+  const fetchMovies = async (actorId: number): Promise<Movie[]> => {
+    const movies = await fetchMoviesByActor(actorId);
+    return movies.map((movie: any) => ({
+      id: movie.id,
+      title: movie.title,
+      release_date: movie.release_date,
+      genre_ids: movie.genre_ids,
+    }));
+  };
+
+  const generateHintsForActor = (movies: Movie[]): string[] => {
+    const validHints: string[] = [];
+
+    const hintCheckers = {
+      'Title Starts with A-H (Ignore "the")': (title: string) =>
+        /^[A-H]/i.test(title.replace(/^the\s+/i, "")),
+      'Title Starts with I-P (Ignore "the")': (title: string) =>
+        /^[I-P]/i.test(title.replace(/^the\s+/i, "")),
+      'Title Starts with Q-Z (Ignore "the")': (title: string) =>
+        /^[Q-Z]/i.test(title.replace(/^the\s+/i, "")),
+      "Double Letter Word in Title": (title: string) =>
+        /\b\w*([a-z])\1\w*\b/i.test(title),
+      "One Word Title (Ignore 'the')": (title: string) =>
+        title.replace(/^the\s+/i, "").split(" ").length === 1,
+      "Three or More Word Title": (title: string) =>
+        title.split(" ").length >= 3,
+      "Released From: 2010-2024": (release_date: string) => {
+        const year = parseInt(release_date.split("-")[0], 10);
+        return year >= 2010 && year <= 2024;
+      },
+      "Released From: 1990-2010": (release_date: string) => {
+        const year = parseInt(release_date.split("-")[0], 10);
+        return year >= 1990 && year <= 2010;
+      },
+      "Pilot Released From: 1990-2024": (release_date: string) => {
+        const year = parseInt(release_date.split("-")[0], 10);
+        return year >= 1990 && year <= 2024;
+      },
+      "Genre: Action": (genres: number[]) => genres.includes(28),
+      "Genre: Comedy": (genres: number[]) => genres.includes(35),
+      "Genre: Drama": (genres: number[]) => genres.includes(18),
+      "Genre: Thriller": (genres: number[]) => genres.includes(53),
+    };
+
+    for (const hint in hintCheckers) {
+      if (
+        movies.some((movie) =>
+          hintCheckers[hint](
+            movie.title || movie.release_date || movie.genre_ids
+          )
+        )
+      ) {
+        validHints.push(hint);
+      }
+    }
+
+    return validHints;
+  };
+
+  const generateHints = async (actor: Actor): Promise<string[]> => {
+    const movies = await fetchMovies(actor.id);
+    const validHints = generateHintsForActor(movies);
+    const shuffledHints = validHints.sort(() => 0.5 - Math.random());
+    return shuffledHints.slice(0, 3); // Select 3 random hints
   };
 
   onMount(async () => {
-    const popularActors: Actor[] = await fetchPopularActors(25); // Fetch actors from 5 pages
+    const popularActors: Actor[] = await fetchPopularActors(50); // Fetch actors from 5 pages
     if (popularActors.length === 0) {
       console.error("No popular actors fetched");
       return;
@@ -49,7 +151,10 @@
       actor.known_for.some((movie) => movie.media_type === "movie")
     );
     const dailyActors = getRandomActors(filteredActors, 3);
-    const dailyHints = dailyActors.map(generateHints);
+
+    // Fetch and store hints for each actor
+    const dailyHintsPromises = dailyActors.map(generateHints);
+    const dailyHints = await Promise.all(dailyHintsPromises);
 
     // Fetch and store actor photos
     for (const actor of dailyActors) {
@@ -97,8 +202,6 @@
         }
       );
       const imageResults = response.data;
-      //results[0].poster_path;
-      console.log(imageResults.results);
       if (imageResults.results.length >= 1) {
         return `https://image.tmdb.org/t/p/w500${imageResults.results[0].poster_path}`;
       } else {
@@ -161,10 +264,48 @@
   const handleGuessSubmit = async (event: CustomEvent) => {
     const { cellId, movie } = event.detail;
     const actor = actorData[Math.floor((cellId - 1) / 3)];
-    const movies = await fetchMoviesByActor(actor.id);
-    const isCorrect = movies.some((m) => m.id === movie.id);
+    const rowIndex = Math.floor((cellId - 1) / 3);
+    const hint = hintData[rowIndex][(cellId - 1) % 3];
 
-    if (isCorrect) {
+    const movies = await fetchMoviesByActor(actor.id);
+    const isCorrectMovie = movies.some((m) => m.id === movie.id);
+
+    const hintCheckers = {
+      'Title Starts with A-H (Ignore "the")': (title: string) =>
+        /^[A-H]/i.test(title.replace(/^the\s+/i, "")),
+      'Title Starts with I-P (Ignore "the")': (title: string) =>
+        /^[I-P]/i.test(title.replace(/^the\s+/i, "")),
+      'Title Starts with Q-Z (Ignore "the")': (title: string) =>
+        /^[Q-Z]/i.test(title.replace(/^the\s+/i, "")),
+      "Double Letter Word in Title": (title: string) =>
+        /\b\w*([a-z])\1\w*\b/i.test(title),
+      "One Word Title (Ignore 'the')": (title: string) =>
+        title.replace(/^the\s+/i, "").split(" ").length === 1,
+      "Three or More Word Title": (title: string) =>
+        title.split(" ").length >= 3,
+      "Released From: 2010-2024": (release_date: string) => {
+        const year = parseInt(release_date.split("-")[0], 10);
+        return year >= 2010 && year <= 2024;
+      },
+      "Released From: 1990-2010": (release_date: string) => {
+        const year = parseInt(release_date.split("-")[0], 10);
+        return year >= 1990 && year <= 2010;
+      },
+      "Pilot Released From: 1990-2024": (release_date: string) => {
+        const year = parseInt(release_date.split("-")[0], 10);
+        return year >= 1990 && year <= 2024;
+      },
+      "Genre: Action": (genres: number[]) => genres.includes(28),
+      "Genre: Comedy": (genres: number[]) => genres.includes(35),
+      "Genre: Drama": (genres: number[]) => genres.includes(18),
+      "Genre: Thriller": (genres: number[]) => genres.includes(53),
+    };
+
+    const isCorrectHint = hintCheckers[hint](
+      movie.title || movie.release_date || movie.genre_ids
+    );
+
+    if (isCorrectMovie && isCorrectHint) {
       try {
         let image = await fetchCollectionImages(movie.title);
         if (image) {
