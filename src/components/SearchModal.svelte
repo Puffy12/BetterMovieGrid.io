@@ -12,7 +12,7 @@
   export let onSubmitImage: (cellId: number, imageUrl: string) => void;
 
   let query = "";
-  let movieResults: { id: number; title: string }[] = [];
+  let movieResults: { id: number; title: string; popularity: number; release_date: string }[] = [];
   let selectedMovie: { id: number; title: string } | null = null;
 
   const dispatch = createEventDispatcher();
@@ -29,22 +29,35 @@
     if (query.length < 3) return;
     try {
       const response = await axios.get(
-        `${BASE_URL}/search/movie?query=${query}`,
+        `${BASE_URL}/search/movie`,
         {
+          params: {
+            query: query,
+            include_adult: false,
+            language: "en-US",
+            page: 1
+          },
           headers: {
             accept: "application/json",
-            Authorization:
-              `Bearer ${BEARER_TOKEN}`,
+            Authorization: `Bearer ${BEARER_TOKEN}`,
           },
         }
       );
-      
-      movieResults = response.data.results.slice(0, 10).map(
-        (movie: { id: number; title: string }) => ({
-          id: movie.id,
-          title: movie.title,
+
+      // Filter out movies with low popularity and sort by popularity and release date
+      movieResults = response.data.results
+        .filter((movie: { popularity: number }) => movie.popularity > 10)
+        .sort((a: { popularity: number; release_date: string }, b: { popularity: number; release_date: string }) => {
+          if (b.popularity === a.popularity) {
+            return new Date(b.release_date).getTime() - new Date(a.release_date).getTime();
+          }
+          return b.popularity - a.popularity;
         })
-      );
+        .slice(0, 10)
+        .map((movie: { id: number; title: string }) => ({
+          id: movie.id,
+          title: movie.title
+        }));
     } catch (error) {
       console.error("Error fetching movies from TMDB API", error);
     }
@@ -120,12 +133,15 @@
     background: white;
     padding: 20px;
     border-radius: 8px;
-    width: 300px;
+    width: 600px;
   }
   .results {
     list-style: none;
     padding: 0;
     margin: 10px 0;
+    max-height: 150px; /* Adjust the height as needed */
+    overflow-y: auto;
+    border: 1px solid #ddd; /* Optional: Add a border */
   }
   .results li {
     padding: 5px;
