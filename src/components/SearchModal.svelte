@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import axios from "axios";
 
-  const API_KEY = import.meta.env.TMDB_API_KEY;
+  const BEARER_TOKEN = import.meta.env.TMDB_BEARER_TOKEN;
   const BASE_URL = "https://api.themoviedb.org/3";
 
   export let visible: boolean;
@@ -34,7 +34,7 @@
           headers: {
             accept: "application/json",
             Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5YzdmNGRiMGY5OTdjZWYxNGVhZDY2ZjA0ZGNhMzQ3YyIsIm5iZiI6MTcyMTY3ODM5Ny41MDM4MDMsInN1YiI6IjY2OWViOTliMmJiNDcyOWEzNWQxNzY4ZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.jkt6au6iiXeO6abHLuPvWWxSQTyv-jyGUeDCK5KiRcM",
+              `Bearer ${BEARER_TOKEN}`,
           },
         }
       );
