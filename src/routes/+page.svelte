@@ -80,29 +80,31 @@
     }
     };
   
-    const fetchCollectionImages = async (collectionId: number): Promise<string | null> => {
-      try {
+    const fetchCollectionImages = async (movie: string): Promise<string | null> => {
+        let encodedString = encodeURIComponent(movie);
+        try {
         const response = await axios.get(
-          `${BASE_URL}/collection/${collectionId}/images`,
-          {
+            `${BASE_URL}/search/movie?query=${encodedString}&include_adult=false&language=en-US&page=1`,
+            {
             headers: {
-              accept: "application/json",
-              Authorization:
+                accept: "application/json",
+                Authorization:
                 "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI5YzdmNGRiMGY5OTdjZWYxNGVhZDY2ZjA0ZGNhMzQ3YyIsIm5iZiI6MTcyMTY3ODM5Ny41MDM4MDMsInN1YiI6IjY2OWViOTliMmJiNDcyOWEzNWQxNzY4ZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.jkt6au6iiXeO6abHLuPvWWxSQTyv-jyGUeDCK5KiRcM",
             },
-          }
+            }
         );
         const imageResults = response.data;
-  
-        if (imageResults.backdrops.length > 0) {
-          return `https://image.tmdb.org/t/p/w500${imageResults.backdrops[0].file_path}`;
+        //results[0].poster_path;
+        console.log(imageResults.results);
+        if (imageResults.results.length > 1) {
+            return `https://image.tmdb.org/t/p/w500${imageResults.results[0].poster_path}`;
         } else {
-          return null;
+            return null;
         }
-      } catch (error) {
+        } catch (error) {
         console.error("Error fetching images from TMDB API", error);
         return null;
-      }
+        }
     };
   
     let actorData: Actor[] = [];
@@ -156,10 +158,10 @@
       const actor = actorData[Math.floor((cellId - 1) / 3)];
       const movies = await fetchMoviesByActor(actor.id);
       const isCorrect = movies.some(m => m.id === movie.id);
-  
+      
       if (isCorrect) {
         try {
-          let image = await fetchCollectionImages(10);
+          let image = await fetchCollectionImages(movie.title);
           if (image) {
             handleImageSubmit(cellId, image);
           } else {
