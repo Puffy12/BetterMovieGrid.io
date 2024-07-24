@@ -9,11 +9,11 @@
   export let visible: boolean;
   export let cellId: number | null;
   export let onClose: () => void;
-  //export let onSubmitImage: (cellId: number, imageUrl: string) => void;
+  // export let onSubmitImage: (cellId: number, imageUrl: string) => void;
 
   let query = "";
-  let movieResults: { id: number; title: string; popularity: number; release_date: string }[] = [];
-  let selectedMovie: { id: number; title: string } | null = null;
+  let movieResults: { id: number; title: string; release_date: string; genre_ids: number[] }[] = [];
+  let selectedMovie: { id: number; title: string; release_date: string; genre_ids: number[] } | null = null;
 
   const dispatch = createEventDispatcher();
 
@@ -29,41 +29,30 @@
     if (query.length < 3) return;
     try {
       const response = await axios.get(
-        `${BASE_URL}/search/movie`,
+        `${BASE_URL}/search/movie?query=${query}`,
         {
-          params: {
-            query: query,
-            include_adult: false,
-            language: "en-US",
-            page: 1
-          },
           headers: {
             accept: "application/json",
-            Authorization: `Bearer ${BEARER_TOKEN}`,
+            Authorization:
+              `Bearer ${BEARER_TOKEN}`,
           },
         }
       );
 
-      // Filter out movies with low popularity and sort by popularity and release date
-      movieResults = response.data.results
-        .filter((movie: { popularity: number }) => movie.popularity > 3)
-        .sort((a: { popularity: number; release_date: string }, b: { popularity: number; release_date: string }) => {
-          if (b.popularity === a.popularity) {
-            return new Date(b.release_date).getTime() - new Date(a.release_date).getTime();
-          }
-          return b.popularity - a.popularity;
-        })
-        .slice(0, 10)
-        .map((movie: { id: number; title: string }) => ({
+      movieResults = response.data.results.slice(0, 10).map(
+        (movie: { id: number; title: string; release_date: string; genre_ids: number[] }) => ({
           id: movie.id,
-          title: movie.title
-        }));
+          title: movie.title,
+          release_date: movie.release_date,
+          genre_ids: movie.genre_ids,
+        })
+      );
     } catch (error) {
       console.error("Error fetching movies from TMDB API", error);
     }
   };
 
-  const selectMovie = (movie: { id: number; title: string }) => {
+  const selectMovie = (movie: { id: number; title: string; release_date: string; genre_ids: number[] }) => {
     selectedMovie = movie;
     query = movie.title;
     movieResults = [];

@@ -49,7 +49,12 @@ export const fetchMoviesByActor = async (actorId) => {
         },
       }
     );
-    return response.data.cast;
+    return response.data.cast.map((movie) => ({
+      id: movie.id,
+      title: movie.title,
+      release_date: movie.release_date,
+      genre_ids: movie.genre_ids,
+    }));
   } catch (error) {
     console.error("Error fetching movies by actor from TMDB API", error);
     return [];

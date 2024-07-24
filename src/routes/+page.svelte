@@ -123,7 +123,11 @@
       if (
         movies.some((movie) =>
           (hintCheckers as any)[hint](
-            movie.title || movie.release_date || movie.genre_ids
+            hint.includes("Title")
+              ? movie.title
+              : hint.includes("Released")
+                ? movie.release_date
+                : movie.genre_ids
           )
         )
       ) {
@@ -263,60 +267,70 @@
 
   const handleGuessSubmit = async (event: CustomEvent) => {
     const { cellId, movie } = event.detail;
+    console.log(movie);
     const actor = actorData[Math.floor((cellId - 1) / 3)];
     const rowIndex = Math.floor((cellId - 1) / 3);
     const hint = hintData[rowIndex][(cellId - 1) % 3];
 
     const movies = await fetchMoviesByActor(actor.id);
-    const isCorrectMovie = (movies as any).some((m: any) => m.id === movie.id);
+    const isCorrectMovie = movies.some((m: any) => m.id === movie.id);
 
+    if (isCorrectMovie) {
+      const hintCheckers = {
+        'Title Starts with A-H (Ignore "the")': (title: string) =>
+          /^[A-H]/i.test(title.replace(/^the\s+/i, "")),
+        'Title Starts with I-P (Ignore "the")': (title: string) =>
+          /^[I-P]/i.test(title.replace(/^the\s+/i, "")),
+        'Title Starts with Q-Z (Ignore "the")': (title: string) =>
+          /^[Q-Z]/i.test(title.replace(/^the\s+/i, "")),
+        "Double Letter Word in Title": (title: string) =>
+          /\b\w*([a-z])\1\w*\b/i.test(title),
+        "One Word Title (Ignore 'the')": (title: string) =>
+          title.replace(/^the\s+/i, "").split(" ").length === 1,
+        "Three or More Word Title": (title: string) =>
+          title.split(" ").length >= 3,
+        "Released From: 2010-2024": (release_date: string) => {
+          const year = parseInt(release_date.split("-")[0], 10);
+          return year >= 2010 && year <= 2024;
+        },
+        "Released From: 1990-2010": (release_date: string) => {
+          const year = parseInt(release_date.split("-")[0], 10);
+          return year >= 1990 && year <= 2010;
+        },
+        "Pilot Released From: 1990-2024": (release_date: string) => {
+          const year = parseInt(release_date.split("-")[0], 10);
+          return year >= 1990 && year <= 2024;
+        },
+        "Genre: Action": (genres: number[]) => genres && genres.includes(28),
+        "Genre: Comedy": (genres: number[]) => genres && genres.includes(35),
+        "Genre: Drama": (genres: number[]) => genres && genres.includes(18),
+        "Genre: Thriller": (genres: number[]) => genres && genres.includes(53),
+      };
 
-    const hintCheckers = {
-      'Title Starts with A-H (Ignore "the")': (title: string) =>
-        /^[A-H]/i.test(title.replace(/^the\s+/i, "")),
-      'Title Starts with I-P (Ignore "the")': (title: string) =>
-        /^[I-P]/i.test(title.replace(/^the\s+/i, "")),
-      'Title Starts with Q-Z (Ignore "the")': (title: string) =>
-        /^[Q-Z]/i.test(title.replace(/^the\s+/i, "")),
-      "Double Letter Word in Title": (title: string) =>
-        /\b\w*([a-z])\1\w*\b/i.test(title),
-      "One Word Title (Ignore 'the')": (title: string) =>
-        title.replace(/^the\s+/i, "").split(" ").length === 1,
-      "Three or More Word Title": (title: string) =>
-        title.split(" ").length >= 3,
-      "Released From: 2010-2024": (release_date: string) => {
-        const year = parseInt(release_date.split("-")[0], 10);
-        return year >= 2010 && year <= 2024;
-      },
-      "Released From: 1990-2010": (release_date: string) => {
-        const year = parseInt(release_date.split("-")[0], 10);
-        return year >= 1990 && year <= 2010;
-      },
-      "Pilot Released From: 1990-2024": (release_date: string) => {
-        const year = parseInt(release_date.split("-")[0], 10);
-        return year >= 1990 && year <= 2024;
-      },
-      "Genre: Action": (genres: number[]) => genres.includes(28),
-      "Genre: Comedy": (genres: number[]) => genres.includes(35),
-      "Genre: Drama": (genres: number[]) => genres.includes(18),
-      "Genre: Thriller": (genres: number[]) => genres.includes(53),
-    };
+      const isCorrectHint = (hintCheckers as any)[hint](
+        hint.includes("Title")
+          ? movie.title
+          : hint.includes("Released")
+            ? movie.release_date
+            : movie.genre_ids
+      );
 
-    const isCorrectHint = (hintCheckers as any)[hint](
-      movie.title || movie.release_date || movie.genre_ids
-    );
+      console.log(isCorrectMovie, isCorrectHint);
 
-    if (isCorrectMovie && isCorrectHint) {
-      try {
-        let image = await fetchCollectionImages(movie.title);
-        if (image) {
-          handleImageSubmit(cellId, image);
-        } else {
-          console.log("No image found for collection.");
+      if (isCorrectHint) {
+        try {
+          let image = await fetchCollectionImages(movie.title);
+          if (image) {
+            handleImageSubmit(cellId, image);
+          } else {
+            console.log("No image found for collection.");
+          }
+          console.log(`Correct guess: ${movie.title}`);
+        } catch (error) {
+          console.error("Error fetching image:", error);
         }
-        console.log(`Correct guess: ${movie.title}`);
-      } catch (error) {
-        console.error("Error fetching image:", error);
+      } else {
+        console.log(`Incorrect guess: ${movie.title}`);
       }
     } else {
       console.log(`Incorrect guess: ${movie.title}`);
