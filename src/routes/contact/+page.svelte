@@ -39,9 +39,9 @@
   class="mt-20 mb-20 sm:mb-32 w-[min(100%,38rem)] text-center scroll-mt-28 flex flex-col justify-center items-center mx-auto px-4"
   use:fade={{ duration: 1000 }}
 >
-  <h2 class="text-2xl sm:text-3xl font-medium capitalize mb-6 sm:mb-8 text-center text-orange-500">Contact Us</h2>
+  <h2 class="text-2xl sm:text-3xl font-bold capitalize mb-6 sm:mb-8 text-center text-orange-500">Contact Us</h2>
 
-  <p class="mt-6 text-white/80 text-center px-2 sm:px-0">
+  <p class="mt-6 text-black/80 text-center px-2 sm:px-0">
     Please contact us directly at
     <a class="text-orange-500 font-bold underline" href="mailto:BetterMovieGrid@gmail.com">
       BetterMovieGrid@gmail.com
