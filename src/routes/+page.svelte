@@ -122,7 +122,7 @@
     for (const hint in hintCheckers) {
       if (
         movies.some((movie) =>
-          hintCheckers[hint](
+          (hintCheckers as any)[hint](
             movie.title || movie.release_date || movie.genre_ids
           )
         )
@@ -268,7 +268,8 @@
     const hint = hintData[rowIndex][(cellId - 1) % 3];
 
     const movies = await fetchMoviesByActor(actor.id);
-    const isCorrectMovie = movies.some((m) => m.id === movie.id);
+    const isCorrectMovie = (movies as any).some((m: any) => m.id === movie.id);
+
 
     const hintCheckers = {
       'Title Starts with A-H (Ignore "the")': (title: string) =>
@@ -301,7 +302,7 @@
       "Genre: Thriller": (genres: number[]) => genres.includes(53),
     };
 
-    const isCorrectHint = hintCheckers[hint](
+    const isCorrectHint = (hintCheckers as any)[hint](
       movie.title || movie.release_date || movie.genre_ids
     );
 

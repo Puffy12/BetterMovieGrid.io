@@ -9,7 +9,7 @@
   export let visible: boolean;
   export let cellId: number | null;
   export let onClose: () => void;
-  export let onSubmitImage: (cellId: number, imageUrl: string) => void;
+  //export let onSubmitImage: (cellId: number, imageUrl: string) => void;
 
   let query = "";
   let movieResults: { id: number; title: string; popularity: number; release_date: string }[] = [];
