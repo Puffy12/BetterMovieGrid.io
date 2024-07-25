@@ -2,6 +2,7 @@
   import SearchModal from "../components/SearchModal.svelte";
   import HintModal from "../components/HintModal.svelte";
   import ActorModal from "../components/ActorModal.svelte";
+  import GameOverModal from "../components/GameOverModal.svelte";
   import { onMount } from "svelte";
   import { actors, hints } from "../stores/movieStore";
   import { fetchPopularActors, fetchMoviesByActor } from "../utils/api";
@@ -318,6 +319,9 @@
       console.log(isCorrectMovie, isCorrectHint);
 
       if (isCorrectHint) {
+        correctGuesses++;
+        correctAnswers[cellId - 1] = movie.title;
+
         try {
           let image = await fetchCollectionImages(movie.title);
           if (image) {
@@ -335,6 +339,21 @@
     } else {
       console.log(`Incorrect guess: ${movie.title}`);
     }
+
+    remainingGuesses--;
+    if (remainingGuesses === 0) {
+      showGameOverModal = true;
+      populatePossibleAnswers();
+    }
+  };
+
+  const populatePossibleAnswers = () => {
+    // Logic to fill possibleAnswers array with correct answers
+  };
+
+  const giveUp = () => {
+    showGameOverModal = true;
+    populatePossibleAnswers();
   };
 
   const openActorModal = async (actor: Actor) => {
@@ -348,26 +367,28 @@
     selectedActorName = "";
     selectedActorPhoto = null;
   };
+
+  let remainingGuesses = 9;
+  let correctGuesses = 0;
+  let correctAnswers: (string | null)[] = Array(9).fill(null);
+  let possibleAnswers: (string | null)[] = Array(9).fill(null);
+  let showGameOverModal = false;
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
-  <div
-    class="grid grid-cols-4 grid-rows-4 -translate-x-12 w-full max-w-lg border border-transparent"
-  >
+  <div class="text-center mb-4">
+    <p>Remaining Guesses: {remainingGuesses}</p>
+    <button on:click={giveUp} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Give Up</button>
+  </div>
+
+  <div class="grid grid-cols-4 grid-rows-4 -translate-x-12 w-full max-w-lg border border-transparent">
     <!-- Empty top-left cell -->
-    <div
-      class="flex items-center justify-start border border-transparent bg-transparent"
-    ></div>
+    <div class="flex items-center justify-start border border-transparent bg-transparent"></div>
 
     <!-- Column hints -->
     {#if hintData.length > 0}
       {#each hintData[0] as hint}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div
-          class="flex items-center justify-center border border-transparent bg-transparent h-24 text-center cursor-pointer"
-          on:click={() => openHintModal(hint)}
-        >
+        <div class="flex items-center justify-center border border-transparent bg-transparent h-24 text-center cursor-pointer" on:click={() => openHintModal(hint)}>
           <p>{hint}</p>
         </div>
       {/each}
@@ -376,32 +397,15 @@
     <!-- Actor names and movie cells -->
     {#if actorData.length > 0 && hintData.length > 0}
       {#each actorData as actor, rowIndex}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div
-          class="flex items-center justify-center border border-transparent bg-transparent m-2 cursor-pointer"
-          on:click={() => openActorModal(actor)}
-        >
+        <div class="flex items-center justify-center border border-transparent bg-transparent m-2 cursor-pointer" on:click={() => openActorModal(actor)}>
           <p>{actor.name}</p>
         </div>
         {#each Array(3) as _, colIndex}
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div
-            role="button"
-            tabindex="0"
-            class="flex items-center justify-center bg-gray-400 text-xl hover:bg-gray-700 h-48 border border-black cursor-pointer relative"
-            on:click={() => openModal(rowIndex * 3 + colIndex + 1)}
-          >
+          <div role="button" tabindex="0" class="flex items-center justify-center bg-gray-400 text-xl hover:bg-gray-700 h-48 border border-black cursor-pointer relative" on:click={() => openModal(rowIndex * 3 + colIndex + 1)}>
             {#if imageSources[rowIndex * 3 + colIndex]}
-              <img
-                src={imageSources[rowIndex * 3 + colIndex]}
-                alt={`Image for cell ${rowIndex * 3 + colIndex + 1}`}
-                class="object-cover w-full h-full"
-              />
+              <img src={imageSources[rowIndex * 3 + colIndex]} alt={`Image for cell ${rowIndex * 3 + colIndex + 1}`} class="object-cover w-full h-full" />
             {:else}
-              <span class="text-white text-2xl font-bold"
-                >{rowIndex * 3 + colIndex + 1}</span
-              >
+              <span class="text-white text-2xl font-bold">{rowIndex * 3 + colIndex + 1}</span>
             {/if}
           </div>
         {/each}
@@ -431,6 +435,14 @@
   onClose={closeModal}
   cellId={selectedCellId}
   on:submitGuess={handleGuessSubmit}
+/>
+
+<GameOverModal
+  visible={showGameOverModal}
+  correctGuesses={correctGuesses}
+  correctAnswers={correctAnswers}
+  possibleAnswers={possibleAnswers}
+  onClose={() => { showGameOverModal = false; }}
 />
 
 <style>
