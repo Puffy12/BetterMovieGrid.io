@@ -388,6 +388,8 @@
     <!-- Column hints -->
     {#if hintData.length > 0}
       {#each hintData[0] as hint}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="flex items-center justify-center border border-transparent bg-transparent h-24 text-center cursor-pointer" on:click={() => openHintModal(hint)}>
           <p>{hint}</p>
         </div>
@@ -397,10 +399,13 @@
     <!-- Actor names and movie cells -->
     {#if actorData.length > 0 && hintData.length > 0}
       {#each actorData as actor, rowIndex}
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div class="flex items-center justify-center border border-transparent bg-transparent m-2 cursor-pointer" on:click={() => openActorModal(actor)}>
           <p>{actor.name}</p>
         </div>
         {#each Array(3) as _, colIndex}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
           <div role="button" tabindex="0" class="flex items-center justify-center bg-gray-400 text-xl hover:bg-gray-700 h-48 border border-black cursor-pointer relative" on:click={() => openModal(rowIndex * 3 + colIndex + 1)}>
             {#if imageSources[rowIndex * 3 + colIndex]}
               <img src={imageSources[rowIndex * 3 + colIndex]} alt={`Image for cell ${rowIndex * 3 + colIndex + 1}`} class="object-cover w-full h-full" />
