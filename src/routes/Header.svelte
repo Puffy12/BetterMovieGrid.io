@@ -2,128 +2,63 @@
 	import { page } from '$app/stores';
 	import logo from '$lib/images/svelte-logo.svg';
 	import github from '$lib/images/github.svg';
+
+	import InfoModal from '../components/InfoModal.svelte';
+	let showInfoModal = false;
+
+	const openInfoModal = () => {
+		showInfoModal = true;
+	};
+
+	const closeInfoModal = () => {
+		showInfoModal = false;
+	};
 </script>
 
-<header>
-	<div class="corner">
-		<a href="https://kit.svelte.dev">
-			<img src={logo} alt="SvelteKit" />
+<header class="flex justify-between items-center p-4 ">
+	<!-- Left corner -->
+	<div class="flex items-center space-x-4">
+		<a href="https://kit.svelte.dev" class="w-12 h-12 flex items-center justify-center">
+			<img src={logo} alt="SvelteKit" class="w-8 h-8 object-contain" />
 		</a>
 	</div>
 
-	<nav>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
+	<!-- Navigation -->
+	<nav class="flex items-center space-x-4 bg-opacity-70  rounded-md shadow-lg">
+		<svg viewBox="0 0 2 3" aria-hidden="true" class="w-8 h-12 invisible">
+			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" class="fill-gray-400" />
 		</svg>
-		<ul>
-			<li aria-current={$page.url.pathname === '/' ? 'page' : undefined}>
-				<a href="/">Home</a>
+		<ul class="flex space-x-4 items-center list-none p-0 m-0">
+			<li class="relative" aria-current="page">
+				<a href="/" class="text-gray-800 font-bold text-sm uppercase tracking-wider hover:text-blue-500 hover:scale-110 ">Home</a>
 			</li>
-			<li aria-current={$page.url.pathname === '/about' ? 'page' : undefined}>
-				<a href="/about">About</a>
+			<li class="relative" aria-current="page">
+				<a href="/about" class="text-gray-800 font-bold text-sm uppercase tracking-wider hover:text-blue-500 hover:scale-110">About</a>
 			</li>
-			<li aria-current={$page.url.pathname.startsWith('/contact') ? 'page' : undefined}>
-				<a href="/contact">contact</a>
+			<li class="relative" aria-current="page">
+				<a href="/contact" class="text-gray-800 font-bold text-sm uppercase tracking-wider hover:text-blue-500 hover:scale-110">Contact</a>
 			</li>
 		</ul>
-		<svg viewBox="0 0 2 3" aria-hidden="true">
-			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" />
+		<svg viewBox="0 0 2 3" aria-hidden="true" class="w-8 h-12 invisible">
+			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z" class="fill-gray-400" />
 		</svg>
 	</nav>
 
-	<div class="corner">
-		<a href="https://github.com/sveltejs/kit">
-			<img src={github} alt="GitHub" />
+	<!-- Right corner -->
+	<div class="flex flex-row items-center space-x-2">
+		<button 
+		class="bg-transparent border-none text-2xl cursor-pointer order-1" 
+		on:click={openInfoModal}>
+		ⓘ
+		</button>
+		<a 
+		href="https://github.com/Puffy12/BetterMovieGrid.io" 
+		class="w-12 h-12 flex items-center justify-center order-2">
+		<img src={github} alt="GitHub" class="w-8 h-8 object-contain" />
 		</a>
 	</div>
+  
+  <InfoModal visible={showInfoModal} onClose={closeInfoModal} />
+
 </header>
 
-<style>
-	header {
-		display: flex;
-		justify-content: space-between;
-	}
-
-	.corner {
-		width: 3em;
-		height: 3em;
-	}
-
-	.corner a {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 100%;
-		height: 100%;
-	}
-
-	.corner img {
-		width: 2em;
-		height: 2em;
-		object-fit: contain;
-	}
-
-	nav {
-		display: flex;
-		justify-content: center;
-		--background: rgba(255, 255, 255, 0.7);
-	}
-
-	svg {
-		width: 2em;
-		height: 3em;
-		display: block;
-	}
-
-	path {
-		fill: var(--background);
-	}
-
-	ul {
-		position: relative;
-		padding: 0;
-		margin: 0;
-		height: 3em;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		list-style: none;
-		background: var(--background);
-		background-size: contain;
-	}
-
-	li {
-		position: relative;
-		height: 100%;
-	}
-
-	li[aria-current='page']::before {
-		--size: 6px;
-		content: '';
-		width: 0;
-		height: 0;
-		position: absolute;
-		top: 0;
-		left: calc(50% - var(--size));
-		border: var(--size) solid transparent;
-		border-top: var(--size) solid var(--color-theme-1);
-	}
-
-	nav a {
-		display: flex;
-		height: 100%;
-		align-items: center;
-		padding: 0 0.5rem;
-		color: var(--color-text);
-		font-weight: 700;
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		text-decoration: none;
-		transition: color 0.2s linear;
-	}
-
-	a:hover {
-		color: var(--color-theme-1);
-	}
-</style>
