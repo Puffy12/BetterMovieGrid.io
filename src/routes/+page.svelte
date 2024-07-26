@@ -171,6 +171,7 @@
 
     actors.set(dailyActors);
     hints.set(dailyHints);
+    isLoading = false;
   });
 
   const fetchActorPhoto = async (actorId: number): Promise<string | null> => {
@@ -224,6 +225,8 @@
   $: hintData = $hints || [];
 
   let imageSources: (string | null)[] = Array(9).fill(null);
+  let isLoading = true;
+
   let showModal: boolean = false;
   let selectedCellId: number | null = null;
 
@@ -376,11 +379,12 @@
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
-  <div class="text-center mb-4">
-    <p>Remaining Guesses: {remainingGuesses}</p>
-    <button on:click={giveUp} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Give Up</button>
-  </div>
 
+ {#if isLoading}
+    <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50">
+      <div class="loader w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full border-t-blue-500 animate-spin"></div>
+    </div>
+  {:else}
   <div class="grid grid-cols-4 grid-rows-4 -translate-x-12 w-full max-w-lg border border-transparent">
     <!-- Empty top-left cell -->
     <div class="flex items-center justify-start border border-transparent bg-transparent"></div>
@@ -417,7 +421,16 @@
       {/each}
     {/if}
   </div>
+
+  <div class="text-center mb-4 inline-block">
+    <p class="font-medium mb-2" >Remaining Guesses:</p>
+    <h1 class="mb-2" >{remainingGuesses}</h1>
+    <button on:click={giveUp} class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Give Up</button>
+  </div>
+
+  {/if}
 </div>
+
 
 {#if showActorModal}
   <ActorModal
