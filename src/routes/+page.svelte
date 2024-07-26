@@ -7,9 +7,9 @@
   import { actors, hints } from "../stores/movieStore";
   import { fetchPopularActors, fetchMoviesByActor } from "../utils/api";
   import axios from "axios";
-
-  const BEARER_TOKEN = import.meta.env.VITE_TMDB_BEARER_TOKEN;
-  const BASE_URL = "https://api.themoviedb.org/3";
+  import { hintOptions, hintDescriptions } from "../utils/data";
+  import { fetchCollectionImages, fetchActorPhoto } from "../utils/functions";
+  import toast, { Toaster } from 'svelte-french-toast';
 
   interface Actor {
     id: number;
@@ -25,51 +25,6 @@
     release_date: string;
     genre_ids: number[];
   }
-
-  const hintOptions = [
-    'Title Starts with A-H (Ignore "the")',
-    'Title Starts with I-P (Ignore "the")',
-    'Title Starts with Q-Z (Ignore "the")',
-    "Double Letter Word in Title",
-    'One Word Title (Ignore "the")',
-    "Three or More Word Title",
-    "Released From: 2010-2024",
-    "Released From: 1990-2010",
-    "Pilot Released From: 1990-2024",
-    "Genre: Action",
-    "Genre: Comedy",
-    "Genre: Drama",
-    "Genre: Thriller",
-  ];
-
-  const hintDescriptions = {
-    'Title Starts with A-H (Ignore "the")':
-      'This hint indicates that the movie title begins with a letter from A to H, not considering the initial "the".',
-    'Title Starts with I-P (Ignore "the")':
-      'This hint suggests that the movie title starts with a letter from I to P, again ignoring any leading "the".',
-    'Title Starts with Q-Z (Ignore "the")':
-      'This hint suggests that the movie title starts with a letter from Q to Z, again ignoring any leading "the".',
-    "Double Letter Word in Title":
-      'This hint reveals that the movie title contains a word with double letters, such as "letter" or "butter".',
-    "One Word Title (Ignore 'the')":
-      'This hint indicates that the movie title is a single word, ignoring any leading "the".',
-    "Three or More Word Title":
-      "This hint suggests that the movie title consists of three or more words.",
-    "Released From: 2010-2024":
-      "This hint indicates that the movie was released between the years 2010 and 2024.",
-    "Released From: 1990-2010":
-      "This hint indicates that the movie was released between the years 1990 and 2010.",
-    "Pilot Released From: 1990-2024":
-      "This hint suggests that the pilot episode of a series was released between 1990 and 2024.",
-    "Genre: Action":
-      "This hint suggests that the movie belongs to the action genre.",
-    "Genre: Comedy":
-      "This hint suggests that the movie belongs to the comedy genre.",
-    "Genre: Drama":
-      "This hint suggests that the movie belongs to the drama genre.",
-    "Genre: Thriller":
-      "This hint suggests that the movie belongs to the thriller genre.",
-  };
 
   const getRandomActors = (actorList: Actor[], num: number): Actor[] => {
     const shuffled = [...actorList].sort(() => 0.5 - Math.random());
@@ -174,50 +129,6 @@
     isLoading = false;
   });
 
-  const fetchActorPhoto = async (actorId: number): Promise<string | null> => {
-    try {
-      const response = await axios.get(`${BASE_URL}/person/${actorId}/images`, {
-        headers: {
-          accept: "application/json",
-          Authorization: `Bearer ${BEARER_TOKEN}`,
-        },
-      });
-      const data = await response.data;
-      if (data.profiles && data.profiles.length > 0) {
-        return `https://image.tmdb.org/t/p/w300_and_h450_bestv2${data.profiles[0].file_path}`;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error fetching actor photo:", error);
-      return null;
-    }
-  };
-
-  const fetchCollectionImages = async (
-    movie: string
-  ): Promise<string | null> => {
-    let encodedString = encodeURIComponent(movie);
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/search/movie?query=${encodedString}&include_adult=false&language=en-US&page=1`,
-        {
-          headers: {
-            accept: "application/json",
-            Authorization: `Bearer ${BEARER_TOKEN}`,
-          },
-        }
-      );
-      const imageResults = response.data;
-      if (imageResults.results.length >= 1) {
-        return `https://image.tmdb.org/t/p/w500${imageResults.results[0].poster_path}`;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error fetching images from TMDB API", error);
-      return null;
-    }
-  };
 
   let actorData: Actor[] = [];
   let hintData: string[][] = [];
@@ -332,14 +243,18 @@
           } else {
             console.log("No image found for collection.");
           }
+          toast.success(`Correct guess: ${movie.title}`);
           console.log(`Correct guess: ${movie.title}`);
+
         } catch (error) {
           console.error("Error fetching image:", error);
         }
       } else {
+        toast.error(`Incorrect guess: ${movie.title}`)
         console.log(`Incorrect guess: ${movie.title}`);
       }
     } else {
+      toast.error(`Incorrect guess: ${movie.title}`)
       console.log(`Incorrect guess: ${movie.title}`);
     }
 
@@ -352,6 +267,8 @@
 
   const populatePossibleAnswers = () => {
     // Logic to fill possibleAnswers array with correct answers
+    possibleAnswers = correctAnswers.slice();
+    console.log(possibleAnswers);
   };
 
   const giveUp = () => {
@@ -379,7 +296,7 @@
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
-
+  <Toaster />
  {#if isLoading}
     <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50">
       <div class="loader w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full border-t-blue-500 animate-spin"></div>

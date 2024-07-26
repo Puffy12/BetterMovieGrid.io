@@ -7,7 +7,11 @@
   </script>
   
   {#if visible}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="modal-overlay" on:click={onClose}>
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="modal" on:click|stopPropagation>
         <h2 class="mb-2">Game Over</h2>
         <p>You got {correctGuesses}/9 guesses correct</p>
