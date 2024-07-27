@@ -6,9 +6,8 @@
   import { onMount } from "svelte";
   import { actors, hints } from "../stores/movieStore";
   import { fetchPopularActors, fetchMoviesByActor } from "../utils/api";
-  import axios from "axios";
   import { hintOptions, hintDescriptions } from "../utils/data";
-  import { fetchCollectionImages, fetchActorPhoto } from "../utils/functions";
+  import { fetchCollectionImages, fetchActorPhoto, SearchForMovieByActorXorGenre } from "../utils/functions";
   import toast, { Toaster } from 'svelte-french-toast';
 
   interface Actor {
@@ -266,9 +265,17 @@
   };
 
   const populatePossibleAnswers = () => {
+    gameOver = true;
     // Logic to fill possibleAnswers array with correct answers
-    possibleAnswers = correctAnswers.slice();
+    /*
+    actorData.forEach(element => {
+      const actorsMovies = SearchForMovieByActorXorGenre(element.name);
+      console.log(element.name);
+      console.log(actorsMovies);
+      //who know if this works fr 
+    });
     console.log(possibleAnswers);
+    */
   };
 
   const giveUp = () => {
@@ -293,6 +300,14 @@
   let correctAnswers: (string | null)[] = Array(9).fill(null);
   let possibleAnswers: (string | null)[] = Array(9).fill(null);
   let showGameOverModal = false;
+  let gameOver = false;
+
+
+  $: { //When the game is over and they close the module 
+        if (!showGameOverModal && gameOver) {
+            window.location.reload();
+        }
+    }
 </script>
 
 <div class="flex items-center justify-center min-h-screen">

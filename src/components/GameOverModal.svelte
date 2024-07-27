@@ -4,6 +4,9 @@
     export let correctAnswers: (string | null)[];
     export let possibleAnswers: (string | null)[];
     export let onClose: () => void;
+
+    let imageSources: (string | null)[] = Array(9).fill(null);
+    //Find a way to get the imgSources from the main page 
   </script>
   
   {#if visible}
@@ -20,7 +23,12 @@
           <h3>Correct Answers</h3>
           <div class="grid">
             {#each correctAnswers as answer, idx}
-              <div class="cell">{answer || ''}</div>
+              {#if answer}
+                <img src={imageSources[idx]} alt={`Image for cell ${idx}`} class="cell" />
+              {:else}  
+                <div class="cell">{answer || ''}</div>
+              {/if}
+              
             {/each}
           </div>
           
