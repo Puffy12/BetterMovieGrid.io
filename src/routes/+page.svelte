@@ -265,7 +265,6 @@
   };
 
   const populatePossibleAnswers = () => {
-    gameOver = true;
     // Logic to fill possibleAnswers array with correct answers
     /*
     actorData.forEach(element => {
@@ -300,14 +299,6 @@
   let correctAnswers: (string | null)[] = Array(9).fill(null);
   let possibleAnswers: (string | null)[] = Array(9).fill(null);
   let showGameOverModal = false;
-  let gameOver = false;
-
-
-  $: { //When the game is over and they close the module 
-        if (!showGameOverModal && gameOver) {
-            window.location.reload();
-        }
-    }
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
@@ -392,7 +383,8 @@
   correctGuesses={correctGuesses}
   correctAnswers={correctAnswers}
   possibleAnswers={possibleAnswers}
-  onClose={() => { showGameOverModal = false; }}
+  onClose={() => { showGameOverModal = false,window.location.reload(); //When the game is over and they close the module 
+; }} 
 />
 
 <style>
