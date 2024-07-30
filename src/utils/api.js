@@ -20,15 +20,19 @@ export const fetchPopularActors = async (pages = 50) => {
       });
 
       const filteredActors = response.data.results.filter((actor) => {
+        // Ensure known_for is defined and has at least one element
+        const hasKnownFor = Array.isArray(actor.known_for) && actor.known_for.length > 0;
+        
         return (
           actor.popularity > 10 &&
           actor.profile_path &&
           actor.known_for_department === "Acting" &&
-          actor.known_for[0].original_language === "en"
+          hasKnownFor &&
+          actor.known_for[0].original_language === "en" // Safe to access now
         );
       });
 
-      allActors = allActors.concat(filteredActors);
+      allActors = allActors.concat(filteredActors); 
     }
 
     return allActors;
