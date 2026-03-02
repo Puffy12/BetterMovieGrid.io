@@ -24,6 +24,9 @@
 		"vite": "^5.4.21"
 	},
 	"type": "module",
+	"overrides": {
+		"rollup": ">=4.59.0"
+	},
 	"dependencies": {
 		"axios": "^1.13.2",
 		"dotenv": "^16.4.5",
