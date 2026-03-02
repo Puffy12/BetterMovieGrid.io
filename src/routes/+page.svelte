@@ -57,21 +57,24 @@
       "Three or More Word Title": (title: string) =>
         title.split(" ").length >= 3,
       "Released From: 2010-2024": (release_date: string) => {
-        const year = parseInt(release_date.split("-")[0], 10);
-        return year >= 2010 && year <= 2024;
+        if (!release_date) return false;
+        const year = parseInt(String(release_date).split("-")[0], 10);
+        return !isNaN(year) && year >= 2010 && year <= 2024;
       },
       "Released From: 1990-2010": (release_date: string) => {
-        const year = parseInt(release_date.split("-")[0], 10);
-        return year >= 1990 && year <= 2010;
+        if (!release_date) return false;
+        const year = parseInt(String(release_date).split("-")[0], 10);
+        return !isNaN(year) && year >= 1990 && year <= 2010;
       },
       "Pilot Released From: 1990-2024": (release_date: string) => {
-        const year = parseInt(release_date.split("-")[0], 10);
-        return year >= 1990 && year <= 2024;
+        if (!release_date) return false;
+        const year = parseInt(String(release_date).split("-")[0], 10);
+        return !isNaN(year) && year >= 1990 && year <= 2024;
       },
-      "Genre: Action": (genres: number[]) => genres.includes(28),
-      "Genre: Comedy": (genres: number[]) => genres.includes(35),
-      "Genre: Drama": (genres: number[]) => genres.includes(18),
-      "Genre: Thriller": (genres: number[]) => genres.includes(53),
+      "Genre: Action": (genres: number[]) => Array.isArray(genres) && genres.includes(28),
+      "Genre: Comedy": (genres: number[]) => Array.isArray(genres) && genres.includes(35),
+      "Genre: Drama": (genres: number[]) => Array.isArray(genres) && genres.includes(18),
+      "Genre: Thriller": (genres: number[]) => Array.isArray(genres) && genres.includes(53),
     };
 
     for (const hint in hintCheckers) {
@@ -101,31 +104,45 @@
   };
 
   onMount(async () => {
-    const popularActors: Actor[] = await fetchPopularActors(50); // Fetch actors from 5 pages
-    if (popularActors.length === 0) {
-      console.error("No popular actors fetched");
-      return;
-    }
-    const filteredActors: Actor[] = popularActors.filter((actor) =>
-      actor.known_for.some((movie) => movie.media_type === "movie")
-    );
-    const dailyActors = getRandomActors(filteredActors, 3);
-
-    // Fetch and store hints for each actor
-    const dailyHintsPromises = dailyActors.map(generateHints);
-    const dailyHints = await Promise.all(dailyHintsPromises);
-
-    // Fetch and store actor photos
-    for (const actor of dailyActors) {
-      const photoUrl = await fetchActorPhoto(actor.id);
-      if (photoUrl) {
-        actorPhotos[actor.name] = photoUrl;
+    try {
+      const popularActors: Actor[] = await fetchPopularActors(5); // Fetch actors from 5 pages
+      if (popularActors.length === 0) {
+        console.error("No popular actors fetched. Check VITE_TMDB_BEARER_TOKEN in .env");
+        hasError = true;
+        isLoading = false;
+        return;
       }
-    }
+      const filteredActors: Actor[] = popularActors.filter((actor) =>
+        actor.known_for?.some((movie) => movie.media_type === "movie")
+      );
+      if (filteredActors.length < 3) {
+        console.error("Not enough actors with movie credits");
+        hasError = true;
+        isLoading = false;
+        return;
+      }
+      const dailyActors = getRandomActors(filteredActors, 3);
 
-    actors.set(dailyActors);
-    hints.set(dailyHints);
-    isLoading = false;
+      // Fetch and store hints for each actor
+      const dailyHintsPromises = dailyActors.map(generateHints);
+      const dailyHints = await Promise.all(dailyHintsPromises);
+
+      // Fetch and store actor photos
+      for (const actor of dailyActors) {
+        const photoUrl = await fetchActorPhoto(actor.id);
+        if (photoUrl) {
+          actorPhotos[actor.name] = photoUrl;
+        }
+      }
+
+      actors.set(dailyActors);
+      hints.set(dailyHints);
+    } catch (err) {
+      console.error("Error loading game:", err);
+      hasError = true;
+    } finally {
+      isLoading = false;
+    }
   });
 
 
@@ -136,6 +153,7 @@
 
   let imageSources: (string | null)[] = Array(9).fill(null);
   let isLoading = true;
+  let hasError = false;
 
   let showModal: boolean = false;
   let selectedCellId: number | null = null;
@@ -204,21 +222,24 @@
         "Three or More Word Title": (title: string) =>
           title.split(" ").length >= 3,
         "Released From: 2010-2024": (release_date: string) => {
-          const year = parseInt(release_date.split("-")[0], 10);
-          return year >= 2010 && year <= 2024;
+          if (!release_date) return false;
+          const year = parseInt(String(release_date).split("-")[0], 10);
+          return !isNaN(year) && year >= 2010 && year <= 2024;
         },
         "Released From: 1990-2010": (release_date: string) => {
-          const year = parseInt(release_date.split("-")[0], 10);
-          return year >= 1990 && year <= 2010;
+          if (!release_date) return false;
+          const year = parseInt(String(release_date).split("-")[0], 10);
+          return !isNaN(year) && year >= 1990 && year <= 2010;
         },
         "Pilot Released From: 1990-2024": (release_date: string) => {
-          const year = parseInt(release_date.split("-")[0], 10);
-          return year >= 1990 && year <= 2024;
+          if (!release_date) return false;
+          const year = parseInt(String(release_date).split("-")[0], 10);
+          return !isNaN(year) && year >= 1990 && year <= 2024;
         },
-        "Genre: Action": (genres: number[]) => genres && genres.includes(28),
-        "Genre: Comedy": (genres: number[]) => genres && genres.includes(35),
-        "Genre: Drama": (genres: number[]) => genres && genres.includes(18),
-        "Genre: Thriller": (genres: number[]) => genres && genres.includes(53),
+        "Genre: Action": (genres: number[]) => Array.isArray(genres) && genres.includes(28),
+        "Genre: Comedy": (genres: number[]) => Array.isArray(genres) && genres.includes(35),
+        "Genre: Drama": (genres: number[]) => Array.isArray(genres) && genres.includes(18),
+        "Genre: Thriller": (genres: number[]) => Array.isArray(genres) && genres.includes(53),
       };
 
       const isCorrectHint = (hintCheckers as any)[hint](
@@ -307,6 +328,13 @@
     <div class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50">
       <div class="loader w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full border-t-blue-500 animate-spin"></div>
     </div>
+  {:else if hasError}
+    <div class="flex flex-col items-center justify-center gap-4 p-6 text-center max-w-md">
+      <p class="text-lg font-medium text-red-700">Failed to load the game.</p>
+      <p class="text-sm text-gray-600">Make sure <code class="bg-gray-200 px-1 rounded">VITE_TMDB_BEARER_TOKEN</code> is set in your <code class="bg-gray-200 px-1 rounded">.env</code> file.</p>
+      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Get a TMDB API key →</a>
+      <button on:click={() => { hasError = false; isLoading = true; location.reload(); }} class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Retry</button>
+    </div>
   {:else}
   <div class="grid grid-cols-4 grid-rows-4 -translate-x-12 w-full max-w-lg border border-transparent">
     <!-- Empty top-left cell -->
@@ -383,8 +411,7 @@
   correctGuesses={correctGuesses}
   correctAnswers={correctAnswers}
   possibleAnswers={possibleAnswers}
-  onClose={() => { showGameOverModal = false,window.location.reload(); //When the game is over and they close the module 
-; }} 
+  onClose={() => { showGameOverModal = false; window.location.reload(); }}
 />
 
 <style>
